@@ -13,6 +13,10 @@ char *concat_args(int argc, char *argv[]) {
         total_length += strlen(argv[i]);
     }
     char *sep = (char *)malloc((total_length + argc - 2 + 1) * sizeof(char)); // +1 for null terminator
+    if(argc == 1){
+        sep = " \t";
+        return sep;
+    } 
     if (sep == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
         exit(EXIT_FAILURE);
