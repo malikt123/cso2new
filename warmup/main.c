@@ -42,6 +42,7 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "Error reading input\n");
             exit(EXIT_FAILURE);
         }
+        input[strcspn(input, "\n")] = '\0';
 
         if (strcmp(input, ".\n") == 0) {
             break;
