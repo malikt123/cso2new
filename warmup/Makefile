@@ -1,16 +1,16 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror -std=c99
-SRCS = split.c main.c
-OBJS = $(SRCS:.c=.o)
-EXEC = split
-.PHONY: all clean
-all: $(EXEC)
+CFLAGS = -D_XOPEN_SOURCE=700 -Og -g -std=c11 -Wall -pedantic -fsanitize=address
 
-$(EXEC): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(EXEC)
+all: split
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+split: main.o split.o
+	$(CC) $(CFLAGS) -o split main.o split.o
+
+main.o: main.c split.h
+	$(CC) $(CFLAGS) -c main.c
+
+split.o: split.c split.h
+	$(CC) $(CFLAGS) -c split.c
 
 clean:
-	rm -f $(OBJS) $(EXEC)
+	rm -f *.o split
