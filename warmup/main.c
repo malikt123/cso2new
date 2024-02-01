@@ -60,8 +60,10 @@ int main(int argc, char *argv[]) {
         }
 
         char **words;
-        int num_words;
-
+        int num_words;  
+        if (strlen(input) == 1 && input[0] == '.') {
+            break;
+        }
         words = string_split(input, sep, &num_words);
         if (words == NULL) {
             fprintf(stderr, "Error splitting input\n");
