@@ -29,7 +29,7 @@ char **string_split(const char *input, const char *sep, int *num_words) {
     }
     int index = input_start_forbidden;
     puts(sep);
-    // Add empty string at the beginning if the first character is forbidden
+    // Add empty string at beginning if first char is forbidden
     if (input_start_forbidden) {
         words[0] = (char *)malloc(1 * sizeof(char));
         if (words[0] == NULL) {
@@ -67,7 +67,7 @@ char **string_split(const char *input, const char *sep, int *num_words) {
         words[index][word_length] = '\0';
         index++;
     }
-    // Add empty string at the end if ends in forbidden
+    // Add empty string at the end if last char is forbidden
     if (input_end_forbidden) {
         words[index] = (char *)malloc(1 * sizeof(char));
         if (words[index] == NULL) {
