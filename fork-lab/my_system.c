@@ -1,27 +1,30 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 int my_system(const char *command) {
+    if (command == NULL) {
+        return 1;
+    }
+
     pid_t pid;
     int status;
 
     pid = fork();
-
     if (pid == -1) {
-        // Fork failed
-        perror("fork");
-        exit(EXIT_FAILURE);
+        return -1;
     } else if (pid == 0) {
-        // Child process
-        execl("/bin/sh", "sh", "-c", command, (char *)NULL);
-        // execl only returns if an error occurs
-        perror("execl");
+        execlp("sh", "sh", "-c", command, (char *)NULL);
         exit(EXIT_FAILURE);
     } else {
-        // Parent process
-        waitpid(pid, &status, 0);
-        return status;
+        if (waitpid(pid, &status, 0) == -1) {
+            return -1;
+        }
+        if (WIFEXITED(status)) {
+            return WEXITSTATUS(status);
+        } else {
+            return -1; 
+        }
     }
 }
