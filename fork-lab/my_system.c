@@ -7,10 +7,8 @@ int my_system(const char *command) {
     if (command == NULL) {
         return 1;
     }
-
     pid_t pid;
     int status;
-
     pid = fork();
     if (pid == -1) {
         return -1;
