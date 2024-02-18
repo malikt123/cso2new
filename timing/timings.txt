@@ -1,0 +1,14 @@
+Scenario 1:
+Average elapsed time for scenario 1 (100 iterations): 87 nanoseconds
+
+Scenario 2:
+Average elapsed time for scenario 2 (100 iterations): 486 nanoseconds
+
+Scenario 3:
+Average elapsed time for scenario 3 (100 iterations): 3193651 nanoseconds
+
+Scenario 4:
+Average elapsed time for scenario 4 (100 iterations): 1687 nanoseconds
+
+Scenario 5:
+Average elapsed time for scenario 5 (100 iterations): 21579 nanoseconds
