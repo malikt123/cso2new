@@ -44,6 +44,9 @@ char *getoutput(const char *command) {
     }
 }
 
+char *parallelgetoutput(int count, const char **argv_base) {
+    return NULL;
+}
 // int main() {
 //     printf("Hi!\n");
 //     char *result = getoutput("echo 1 2 3; sleep 2; echo 5 5");
