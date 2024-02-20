@@ -97,13 +97,13 @@ char *parallelgetoutput(int count, const char **argv_base) {
     return combined_output;
 }
 
-int main() {
-    const char *argv_base[] = { "/bin/echo", "running", NULL };
-    const char *output = parallelgetoutput(2, argv_base);
-    printf("Text: [%s]\n", output);
-    free((void *)output);  // free memory
-    return 0;
-}
+// int main() {
+//     const char *argv_base[] = { "/bin/echo", "running", NULL };
+//     const char *output = parallelgetoutput(2, argv_base);
+//     printf("Text: [%s]\n", output);
+//     free((void *)output);  // free memory
+//     return 0;
+// }
 
 // int main() {
 //     printf("Hi!\n");
