@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stddef.h>
+#include <stdint.h>
 #include "mlpt.h"
 #include "config.h"
 
