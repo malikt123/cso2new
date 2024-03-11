@@ -74,7 +74,7 @@ void page_allocate(size_t va) {
     size_t bitmask = (1 << total_bits) - 1;
     size_t just_segments = (va >> POBITS) & bitmask;
     size_t pt_address = ptbr;
-
+    int count = 0;
     for (int i = 0; i < LEVELS; i++) {
         size_t segment = just_segments >> ((LEVELS - i - 1) * segment_size);
         size_t *address_pointer = pt_address + (segment * 8);
@@ -83,9 +83,9 @@ void page_allocate(size_t va) {
         if (pte_address % 2 == 0) {
             // mapping doesn't exist
             size_t *new_page_table;
-            posix_memalign((void **)&new_page_table, PAGE_SIZE, PAGE_SIZE);
+            posix_memalign(&new_page_table, PAGE_SIZE, PAGE_SIZE);
             *address_pointer = (size_t)new_page_table | 1;
-            
+            count += 1;
             // update pt_address for next level
             pt_address = (size_t)new_page_table;
         } else {
@@ -96,30 +96,30 @@ void page_allocate(size_t va) {
     }
 }
 
-    alignas(4096);
-    static size_t page_of_data[512];
-    alignas(4096);
-    static size_t testing_page_table[512];
-    alignas(4096);
-    static char data_for_page_3[4096];
-    static void set_testing_ptbr(void) {
-        ptbr = (size_t) &testing_page_table[0];
-    }
-int main() {
-    printf("%zx\n", translate(0x00));
-    set_testing_ptbr();
-    size_t address_of_data_for_page_3_as_integer = (size_t) &data_for_page_3[0]; 
-    size_t physical_page_number_of_data_for_page_3 = address_of_data_for_page_3_as_integer >> 12;
-    // instead of >> 12, we could have written:
-    // address_of_data_for_page_3_as_integer / 4096
-    size_t page_table_entry_for_page_3 = (
-    // physical page number in upper (64-POBITS) bits
-            (physical_page_number_of_data_for_page_3 << 12)
-        |
-            // valid bit in least significant bit, set to 1
-            1
-    );
-    // assuming testing_page_table initialized as above and ptbr points to it
-    testing_page_table[3] = page_table_entry_for_page_3;
-    return translate(0x3045) == (size_t) &data_for_page_3[0x45];
-}
+//     alignas(4096);
+//     static size_t page_of_data[512];
+//     alignas(4096);
+//     static size_t testing_page_table[512];
+//     alignas(4096);
+//     static char data_for_page_3[4096];
+//     static void set_testing_ptbr(void) {
+//         ptbr = (size_t) &testing_page_table[0];
+//     }
+// int main() {
+//     printf("%zx\n", translate(0x0123456789abcdef));
+//     set_testing_ptbr();
+//     size_t address_of_data_for_page_3_as_integer = (size_t) &data_for_page_3[0]; 
+//     size_t physical_page_number_of_data_for_page_3 = address_of_data_for_page_3_as_integer >> 12;
+//     // instead of >> 12, we could have written:
+//     // address_of_data_for_page_3_as_integer / 4096
+//     size_t page_table_entry_for_page_3 = (
+//     // physical page number in upper (64-POBITS) bits
+//             (physical_page_number_of_data_for_page_3 << 12)
+//         |
+//             // valid bit in least significant bit, set to 1
+//             1
+//     );
+//     // assuming testing_page_table initialized as above and ptbr points to it
+//     testing_page_table[3] = page_table_entry_for_page_3;
+//     return translate(0x3045) == (size_t) &data_for_page_3[0x45];
+// }
