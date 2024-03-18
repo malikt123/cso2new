@@ -54,7 +54,6 @@ void page_allocate(size_t va) {
     size_t total_bits = segment_size * LEVELS;
     size_t bitmask = (1 << total_bits) - 1; // mask same size as segments
     size_t just_segments = (va >> POBITS) & bitmask; // determine segements by themselves
-    size_t pt_address = ptbr;
     if(ptbr == 0){ // make page table if not made yet
         size_t *new_page_table;
         posix_memalign(&new_page_table, page_size, page_size); // make space for next table
