@@ -5,89 +5,78 @@
 #include "mlpt.h"
 #include "config.h"
 #include <math.h>
-
-#define PAGE_SIZE (1 << POBITS)
+#include <assert.h>
+#include <string.h>
+#include <stdlib.h>
 
 size_t ptbr = 0;
 
-// size_t translate(size_t va) {
-//     size_t offset_mask = (1 << POBITS) - 1;
-//     size_t pt_index_mask = POBITS - 3;
-//     // get offset/page table index from the virtual address
-//     size_t offset = va & offset_mask;
-//     size_t pt_index = (va >> POBITS) & ((1 << pt_index_mask) - 1);
-//     size_t pt_address = ptbr; // initialize page table address with page table base register
-//     size_t entry = *(size_t*)(ptbr + pt_index * 8);
-//     if(entry % 2 == 0){
-//         return -1;
-//     }
-//     size_t ppn = entry >> POBITS;
-//     printf("%zx\n", ppn);
-//     ppn = ppn << POBITS;
-//     printf("%zx\n", ppn);
-//     size_t physical_address = ppn + offset;
-//     printf("%zx\n", physical_address);
-//     // check if entry is valid (least significant bit) -- 0 is not valid. if 1, most significant (64 - POBITS)
-//     return physical_address;
-// }
-
 size_t translate(size_t va) {
-    size_t offset_mask = (1 << POBITS) - 1;
-    size_t offset = va & offset_mask;
+    // arithmetic to find segment size
+    size_t offset_mask = (1 << POBITS) - 1; // mask same size as offset
+    size_t offset = va & offset_mask; // determine offset by itself
     size_t page_size = 1 << POBITS;
     size_t entries_per_page = page_size / 8;
     size_t segment_size = log(entries_per_page) / log(2);
     size_t total_bits = segment_size * LEVELS;
-    size_t bitmask = (1 << total_bits) - 1;
-    size_t just_segments = (va >> POBITS) & bitmask;
+    size_t bitmask = (1 << total_bits) - 1; // mask same size as segments
+    size_t just_segments = (va >> POBITS) & bitmask; // determine segements by themselves
     size_t pt_address = ptbr;
     if(ptbr == 0){
-        return -1;
+        return -1; // return -1 if ptbr = 0
     }
     for(int i = 0; i < LEVELS; i++){
         // extract segment_size bits from the left of just_segments
-        size_t segment = just_segments >> ((LEVELS - i - 1) * segment_size);
-        // mask out the extracted segment bits from just_segments
-        // just_segments &= ~(bitmask >> ((LEVELS - i - 1) * segment_size));
-        size_t *address_pointer = pt_address + (segment * 8);
+        size_t segment = just_segments >> ((LEVELS - i - 1) * segment_size); // isolate individual segment size
+        size_t segment_mask = (1 << segment_size) - 1; // mask same size as one segment
+        segment = segment & segment_mask; // determine segment by itself
+        size_t *address_pointer = pt_address + (segment * 8); 
         size_t pte_address = *(address_pointer);
         if(pte_address % 2 == 0){
-            return -1;
+            return -1; // not valid
         }
         pte_address = (pte_address >> POBITS) * page_size;
-        pt_address = pte_address;
+        pt_address = pte_address; // acts as next ptbr
     }
-    size_t ppn = pt_address >> POBITS;
-    ppn = ppn << POBITS;
-    size_t physical_address = ppn + offset;
-    // printf("%zx\n", physical_address);
+    size_t ppn = pt_address >> POBITS; 
+    ppn = ppn << POBITS; // make enough 0's for offset to get added
+    size_t physical_address = ppn + offset; //physical address
     return physical_address;
 }
 
 void page_allocate(size_t va) {
-    size_t offset_mask = (1 << POBITS) - 1;
-    size_t offset = va & offset_mask;
+    // arithmetic to find segment size
+    size_t offset_mask = (1 << POBITS) - 1; // mask same size as offset
+    size_t offset = va & offset_mask; // determine offset by itself
     size_t page_size = 1 << POBITS;
     size_t entries_per_page = page_size / 8;
     size_t segment_size = log(entries_per_page) / log(2);
     size_t total_bits = segment_size * LEVELS;
-    size_t bitmask = (1 << total_bits) - 1;
-    size_t just_segments = (va >> POBITS) & bitmask;
+    size_t bitmask = (1 << total_bits) - 1; // mask same size as segments
+    size_t just_segments = (va >> POBITS) & bitmask; // determine segements by themselves
     size_t pt_address = ptbr;
-    int count = 0;
+    if(ptbr == 0){ // make page table if not made yet
+        size_t *new_page_table;
+        posix_memalign(&new_page_table, page_size, page_size); // make space for next table
+        memset(new_page_table, 0, page_size); // set memory to 0 to avoid seg faults
+        ptbr = new_page_table; // point to beginning of new table
+    }
+    size_t pt_address = ptbr;
     for (int i = 0; i < LEVELS; i++) {
-        size_t segment = just_segments >> ((LEVELS - i - 1) * segment_size);
-        size_t *address_pointer = pt_address + (segment * 8);
-        size_t pte_address = *address_pointer;
-        
-        if (pte_address % 2 == 0) {
-            // mapping doesn't exist
+        // extract segment_size bits from the left of just_segments
+        size_t segment = just_segments >> ((LEVELS - i - 1) * segment_size); // isolate individual segment size
+        size_t segment_mask = (1 << segment_size) - 1; // mask same size as one segment
+        segment = segment & segment_mask; // determine segment by itself
+        size_t *address_pointer = pt_address + (segment * 8); 
+        size_t pte_address = *(address_pointer);
+        if (pte_address % 2 == 0) { // mapping doesn't exist
             size_t *new_page_table;
-            posix_memalign(&new_page_table, PAGE_SIZE, PAGE_SIZE);
-            *address_pointer = (size_t)new_page_table | 1;
-            count += 1;
+            posix_memalign(&new_page_table, page_size, page_size); // make space for next table
+            memset(new_page_table, 0, page_size); // set memory to 0 to avoid seg faults
+            *address_pointer = (size_t)new_page_table | 1; // set valid bit to 1
             // update pt_address for next level
-            pt_address = (size_t)new_page_table;
+            address_pointer = ((size_t)new_page_table >> POBITS) * page_size;
+            pt_address = (size_t)address_pointer; // acts as next ptbr
         } else {
             // mapping exists
             pte_address = (pte_address >> POBITS) * page_size;
@@ -95,31 +84,13 @@ void page_allocate(size_t va) {
         }
     }
 }
-
-//     alignas(4096);
-//     static size_t page_of_data[512];
-//     alignas(4096);
-//     static size_t testing_page_table[512];
-//     alignas(4096);
-//     static char data_for_page_3[4096];
-//     static void set_testing_ptbr(void) {
-//         ptbr = (size_t) &testing_page_table[0];
-//     }
-// int main() {
-//     printf("%zx\n", translate(0x0123456789abcdef));
-//     set_testing_ptbr();
-//     size_t address_of_data_for_page_3_as_integer = (size_t) &data_for_page_3[0]; 
-//     size_t physical_page_number_of_data_for_page_3 = address_of_data_for_page_3_as_integer >> 12;
-//     // instead of >> 12, we could have written:
-//     // address_of_data_for_page_3_as_integer / 4096
-//     size_t page_table_entry_for_page_3 = (
-//     // physical page number in upper (64-POBITS) bits
-//             (physical_page_number_of_data_for_page_3 << 12)
-//         |
-//             // valid bit in least significant bit, set to 1
-//             1
-//     );
-//     // assuming testing_page_table initialized as above and ptbr points to it
-//     testing_page_table[3] = page_table_entry_for_page_3;
-//     return translate(0x3045) == (size_t) &data_for_page_3[0x45];
-// }
+int main(){
+    page_allocate(0x3000);
+    size_t *pointer_to_table;
+    pointer_to_table = (size_t *) ptbr;
+    size_t page_table_entry = pointer_to_table[3];
+    printf("PTE @ index 3: valid bit=%d  physical page number=0x%lx\n",
+    (int) (page_table_entry & 1),
+    (long) (page_table_entry >> 12)
+);
+}
