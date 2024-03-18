@@ -84,13 +84,13 @@ void page_allocate(size_t va) {
         }
     }
 }
-int main(){
-    page_allocate(0x3000);
-    size_t *pointer_to_table;
-    pointer_to_table = (size_t *) ptbr;
-    size_t page_table_entry = pointer_to_table[3];
-    printf("PTE @ index 3: valid bit=%d  physical page number=0x%lx\n",
-    (int) (page_table_entry & 1),
-    (long) (page_table_entry >> 12)
-);
-}
+// int main(){
+//     page_allocate(0x3000);
+//     size_t *pointer_to_table;
+//     pointer_to_table = (size_t *) ptbr;
+//     size_t page_table_entry = pointer_to_table[3];
+//     printf("PTE @ index 3: valid bit=%d  physical page number=0x%lx\n",
+//     (int) (page_table_entry & 1),
+//     (long) (page_table_entry >> 12)
+// );
+// }
